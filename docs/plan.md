@@ -212,18 +212,13 @@ clear and practical approach.
 
 ## Implementation Phases
 
-1. Create `HotelBooking.sln`, the `Api`, `Models`, `Services`, `UnitTests`, and
-   `IntegrationTests` projects, Swagger, and `/health`.
-2. Add models and EF Core configuration.
-3. Add seed/reset support in `HotelBooking.Services` with one hotel and six
-   rooms across single, double, and deluxe room types.
-4. Add hotel search by name.
-5. Add available-room search by date range and guest count.
-6. Add booking creation with overlap, capacity, and one-room-per-stay rules.
-7. Add booking lookup by booking reference.
-8. Add unit and integration tests for the risky rules.
-9. Add README instructions and example API requests.
-10. Optionally add Azure/Bicep deployment support.
+1. Create solution/projects.
+2. Add models and EF Core context.
+3. Add services for seed/reset and booking rules.
+4. Add API controllers and Swagger.
+5. Add tests as each feature lands.
+6. Add README instructions and example API requests.
+7. Optionally add Azure/Bicep deployment support.
 
 ## Azure Deployment Plan
 
@@ -234,10 +229,9 @@ Recommended low-idle-cost Azure shape:
 
 ```text
 Swagger / API consumer
-  -> HotelBooking.Api container image
+  -> ghcr.io/sses79/hotel-booking-api:<commit-sha>
   -> Azure Container Apps Consumption
   -> Azure SQL Database serverless
-  -> optional Application Insights
 ```
 
 Recommended infrastructure:
@@ -245,11 +239,17 @@ Recommended infrastructure:
 - Azure Container Apps Consumption for the API, configured with `minReplicas: 0`
   and a small `maxReplicas` value.
 - A `Dockerfile` for `HotelBooking.Api`.
-- A public GitHub Container Registry image or another low-friction image
-  registry.
+- GitHub Actions builds and pushes the API image to GitHub Container Registry:
+  `ghcr.io/sses79/hotel-booking-api:<commit-sha>`.
+- Keep the GHCR package public while this repository is public so Azure
+  Container Apps can pull the image anonymously, avoiding ACR cost and registry
+  credentials.
+- Deploy immutable commit-SHA tags. Do not rely on `latest` for Azure
+  deployments.
 - Azure SQL serverless for the hosted EF Core database.
 - Optional Key Vault for secrets.
-- Optional Application Insights for diagnostics.
+- No Application Insights or Log Analytics for this challenge, to avoid
+  surprise log-ingestion cost.
 - Bicep parameters for environment-specific values.
 
 App Service Free F1 can still be used as a quick demo path if the subscription,
@@ -309,6 +309,31 @@ Use `HotelBooking.UnitTests` for pure rules such as date overlap. Use
 `HotelBooking.IntegrationTests` for EF Core, seed/reset, and API behavior.
 Prefer SQLite-backed integration tests over EF Core InMemory when testing
 relational behavior.
+
+## Continuous Integration
+
+GitHub Actions should validate every pull request and every push to `main`
+without deploying anything to Azure. Do not run a separate push trigger for
+`dev`; pull request checks already cover the `dev` to `main` workflow.
+
+Required workflows:
+
+- `CI`: restore, build, test, and whitespace checks.
+- `Security`: NuGet vulnerable-package audit on pull requests, `main`, and a
+  weekly schedule.
+
+Local equivalents:
+
+```bash
+dotnet restore HotelBooking.slnx
+dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
+dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers
+dotnet list HotelBooking.slnx package --vulnerable --include-transitive
+git diff --check
+```
+
+CI must stay read-only. Do not add Azure credentials, GHCR publishing, or Azure
+deployment to CI until the project reaches the Azure/Docker slice.
 
 ## Reviewer Notes
 

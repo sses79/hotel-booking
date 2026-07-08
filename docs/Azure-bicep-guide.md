@@ -32,7 +32,6 @@ Recommended minimal Azure shape:
 Browser / Swagger
   -> ASP.NET Core API
   -> Azure SQL Database
-  -> Application Insights optional
 ```
 
 Good hosting options:
@@ -59,7 +58,6 @@ infra/
       app-service.bicep
       sql.bicep
       key-vault.bicep
-      observability.bicep
 ```
 
 Start smaller if needed:
@@ -163,7 +161,6 @@ Use Key Vault for secrets when the deployment has anything sensitive.
 For this hotel challenge, possible secrets are:
 
 - SQL administrator password.
-- Application Insights connection string if not exposed as a normal app setting.
 - Any future external API key.
 
 The `tfl-analytics` pattern to copy:
@@ -315,7 +312,7 @@ This is better than only proving that Azure resources exist.
 Keep cost visible:
 
 - Use development-sized SKUs.
-- Make observability optional if log ingestion cost is a concern.
+- Do not deploy Application Insights or Log Analytics for this challenge.
 - Delete unused resources.
 - Avoid over-provisioned databases.
 - Document any free-tier assumptions and check current Azure pricing before
