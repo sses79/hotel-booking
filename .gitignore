@@ -1,0 +1,53 @@
+# Build output
+bin/
+obj/
+out/
+artifacts/
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+coverage.cobertura.xml
+
+# User and IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+local.settings.json
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+logs/
+
+# Docker and publish output
+docker-compose.override.yml
+publish/
+
+# Azure/Bicep generated output
+infra/bicep/*.json
+!infra/bicep/environments/*.json
+
+# NuGet
+*.nupkg
+packages/
