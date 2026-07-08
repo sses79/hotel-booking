@@ -1,4 +1,5 @@
 using HotelBooking.Repository;
+using HotelBooking.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHotelBookingRepository(builder.Configuration);
+builder.Services.AddHotelBookingServices();
 
 var app = builder.Build();
 
