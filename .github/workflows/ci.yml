@@ -32,6 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compile Bicep
+        run: az bicep build --file infra/bicep/main.bicep
+
       - name: Check whitespace
         run: git diff --check
 
