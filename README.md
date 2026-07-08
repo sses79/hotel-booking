@@ -247,7 +247,7 @@ Public GHCR image -> Azure Container Apps Consumption -> Azure SQL serverless
 ```
 
 There is no Application Insights or Log Analytics workspace. Container Apps
-logging is set to `none` to avoid log-ingestion charges.
+has no application-log destination configured, avoiding log-ingestion charges.
 
 The `Publish API image` workflow runs after API-related changes reach `main`.
 It publishes only the immutable commit SHA tag:
