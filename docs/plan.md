@@ -312,14 +312,15 @@ relational behavior.
 
 ## Continuous Integration
 
-GitHub Actions should validate every pull request and every push to `dev` or
-`main` without deploying anything to Azure.
+GitHub Actions should validate every pull request and every push to `main`
+without deploying anything to Azure. Do not run a separate push trigger for
+`dev`; pull request checks already cover the `dev` to `main` workflow.
 
 Required workflows:
 
 - `CI`: restore, build, test, and whitespace checks.
-- `Security`: NuGet vulnerable-package audit on pull requests, `dev`, `main`,
-  and a weekly schedule.
+- `Security`: NuGet vulnerable-package audit on pull requests, `main`, and a
+  weekly schedule.
 
 Local equivalents:
 
