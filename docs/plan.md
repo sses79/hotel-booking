@@ -243,7 +243,14 @@ clear and practical approach.
 4. Add API controllers and Swagger.
 5. Add tests as each feature lands.
 6. Add README instructions and example API requests.
-7. Optionally add Azure/Bicep deployment support.
+7. Add optional Azure/Bicep deployment support:
+   - `src/HotelBooking.Api/Dockerfile` builds the API image.
+   - `.github/workflows/publish-api-image.yml` publishes commit-SHA tags to
+     GHCR after changes reach `main`.
+   - `infra/bicep/main.bicep` provisions Container Apps Consumption and Azure
+     SQL serverless without Application Insights or Log Analytics.
+   - `infra/bicep/environments/dev.bicepparam` holds non-secret development
+     parameters and reads the SQL password from the deployment environment.
 
 ## Azure Deployment Plan
 
@@ -359,8 +366,9 @@ git diff --check
 docker compose --env-file .env.example -f infra/local/compose.yaml config --quiet
 ```
 
-CI must stay read-only. Do not add Azure credentials, GHCR publishing, or Azure
-deployment to CI until the project reaches the Azure/Docker slice.
+CI validation stays read-only. GHCR publishing is isolated in a separate
+workflow, and Azure deployment remains a manual operation with no Azure
+credentials stored in GitHub.
 
 ## Reviewer Notes
 
