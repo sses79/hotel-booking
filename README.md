@@ -237,6 +237,7 @@ date.
 - [Implementation Plan](docs/plan.md)
 - [Solve Challenge Guide](docs/solve-challenge-guide.md)
 - [Azure Bicep Guide](docs/Azure-bicep-guide.md)
+- [Azure Deployment Runbook](docs/Azure-deployment.md)
 
 ## Optional Azure Deployment
 
