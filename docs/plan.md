@@ -212,18 +212,13 @@ clear and practical approach.
 
 ## Implementation Phases
 
-1. Create `HotelBooking.sln`, the `Api`, `Models`, `Services`, `UnitTests`, and
-   `IntegrationTests` projects, Swagger, and `/health`.
-2. Add models and EF Core configuration.
-3. Add seed/reset support in `HotelBooking.Services` with one hotel and six
-   rooms across single, double, and deluxe room types.
-4. Add hotel search by name.
-5. Add available-room search by date range and guest count.
-6. Add booking creation with overlap, capacity, and one-room-per-stay rules.
-7. Add booking lookup by booking reference.
-8. Add unit and integration tests for the risky rules.
-9. Add README instructions and example API requests.
-10. Optionally add Azure/Bicep deployment support.
+1. Create solution/projects.
+2. Add models and EF Core context.
+3. Add services for seed/reset and booking rules.
+4. Add API controllers and Swagger.
+5. Add tests as each feature lands.
+6. Add README instructions and example API requests.
+7. Optionally add Azure/Bicep deployment support.
 
 ## Azure Deployment Plan
 
