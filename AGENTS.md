@@ -143,10 +143,14 @@ Azure hosting is optional because the challenge says it is not critical.
 If Azure deployment is added, prefer the low-idle-cost path:
 
 ```text
-HotelBooking.Api container image
+ghcr.io/sses79/hotel-booking-api:<commit-sha>
   -> Azure Container Apps Consumption
   -> Azure SQL Database serverless
 ```
+
+Use GitHub Container Registry like `tfl-analytics`. Keep the package public
+while the repo is public so Azure Container Apps can pull anonymously. Deploy
+commit-SHA image tags, not `latest`.
 
 App Service Free F1 may be used only as a quick demo if the subscription,
 region, quota, and runtime support it. Do not make the solution depend on Free

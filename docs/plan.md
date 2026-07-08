@@ -234,7 +234,7 @@ Recommended low-idle-cost Azure shape:
 
 ```text
 Swagger / API consumer
-  -> HotelBooking.Api container image
+  -> ghcr.io/sses79/hotel-booking-api:<commit-sha>
   -> Azure Container Apps Consumption
   -> Azure SQL Database serverless
   -> optional Application Insights
@@ -245,8 +245,13 @@ Recommended infrastructure:
 - Azure Container Apps Consumption for the API, configured with `minReplicas: 0`
   and a small `maxReplicas` value.
 - A `Dockerfile` for `HotelBooking.Api`.
-- A public GitHub Container Registry image or another low-friction image
-  registry.
+- GitHub Actions builds and pushes the API image to GitHub Container Registry:
+  `ghcr.io/sses79/hotel-booking-api:<commit-sha>`.
+- Keep the GHCR package public while this repository is public so Azure
+  Container Apps can pull the image anonymously, avoiding ACR cost and registry
+  credentials.
+- Deploy immutable commit-SHA tags. Do not rely on `latest` for Azure
+  deployments.
 - Azure SQL serverless for the hosted EF Core database.
 - Optional Key Vault for secrets.
 - Optional Application Insights for diagnostics.
