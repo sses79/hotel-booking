@@ -196,21 +196,11 @@ Local Compose files:
 infra/local/compose.yaml
 ```
 
-Start local SQL Server:
+Operational commands for starting, stopping, and validating the local SQL Server
+container live in `README.md`.
 
-```bash
-cp .env.example .env
-docker compose --env-file .env -f infra/local/compose.yaml up -d sql
-```
-
-Default local connection-string shape:
-
-```text
-Server=localhost,1433;Database=HotelBooking;User Id=sa;Password=<MSSQL_SA_PASSWORD>;Encrypt=True;TrustServerCertificate=True
-```
-
-SQLite is no longer the default. It may still be used for tiny pure integration
-tests if useful, but the main local API path should use SQL Server.
+SQLite is no longer the default. The main local API path and relational
+integration tests should use SQL Server.
 
 ## Booking Algorithm
 
