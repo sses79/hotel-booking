@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
     <ProjectReference Include="..\HotelBooking.Models\HotelBooking.Models.csproj" />
     <ProjectReference Include="..\HotelBooking.Repository\HotelBooking.Repository.csproj" />
   </ItemGroup>
