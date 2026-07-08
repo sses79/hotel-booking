@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore HotelBooking.slnx
+
+      - name: Build
+        run: dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
+
+      - name: Test
+        run: dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers
+
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whitespace
+        run: git diff --check

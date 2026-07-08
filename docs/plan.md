@@ -310,6 +310,30 @@ Use `HotelBooking.UnitTests` for pure rules such as date overlap. Use
 Prefer SQLite-backed integration tests over EF Core InMemory when testing
 relational behavior.
 
+## Continuous Integration
+
+GitHub Actions should validate every pull request and every push to `dev` or
+`main` without deploying anything to Azure.
+
+Required workflows:
+
+- `CI`: restore, build, test, and whitespace checks.
+- `Security`: NuGet vulnerable-package audit on pull requests, `dev`, `main`,
+  and a weekly schedule.
+
+Local equivalents:
+
+```bash
+dotnet restore HotelBooking.slnx
+dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
+dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers
+dotnet list HotelBooking.slnx package --vulnerable --include-transitive
+git diff --check
+```
+
+CI must stay read-only. Do not add Azure credentials, GHCR publishing, or Azure
+deployment to CI until the project reaches the Azure/Docker slice.
+
 ## Reviewer Notes
 
 The implementation should be intentionally small. The goal is not to build a
