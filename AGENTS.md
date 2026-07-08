@@ -165,5 +165,6 @@ F1 being available.
 - Message queues.
 - Cosmos DB.
 - SignalR.
+- Application Insights or Log Analytics for this challenge.
 - Complex Azure infrastructure beyond what is useful for this challenge.
 - Large abstractions that do not directly help the booking API.

@@ -237,7 +237,6 @@ Swagger / API consumer
   -> ghcr.io/sses79/hotel-booking-api:<commit-sha>
   -> Azure Container Apps Consumption
   -> Azure SQL Database serverless
-  -> optional Application Insights
 ```
 
 Recommended infrastructure:
@@ -254,7 +253,8 @@ Recommended infrastructure:
   deployments.
 - Azure SQL serverless for the hosted EF Core database.
 - Optional Key Vault for secrets.
-- Optional Application Insights for diagnostics.
+- No Application Insights or Log Analytics for this challenge, to avoid
+  surprise log-ingestion cost.
 - Bicep parameters for environment-specific values.
 
 App Service Free F1 can still be used as a quick demo path if the subscription,
