@@ -21,6 +21,7 @@ HotelBooking.slnx
 src/
   HotelBooking.Api/
   HotelBooking.Models/
+  HotelBooking.Repository/
   HotelBooking.Services/
 tests/
   HotelBooking.UnitTests/

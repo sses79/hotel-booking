@@ -21,6 +21,7 @@ HotelBooking.sln
 src/
   HotelBooking.Api/
   HotelBooking.Models/
+  HotelBooking.Repository/
   HotelBooking.Services/
 tests/
   HotelBooking.UnitTests/
@@ -34,17 +35,18 @@ Responsibilities:
   endpoint, API validation responses, and dependency registration.
 - `HotelBooking.Models`: `Hotel`, `Room`, `Booking`, `RoomType`, shared enums,
   and simple result/request types where useful.
+- `HotelBooking.Repository`: EF Core `DbContext`, SQL Server configuration,
+  migrations, and persistence query helpers.
 - `HotelBooking.Services`: hotel search, room availability, booking creation,
-  booking lookup, seed/reset orchestration, EF Core `DbContext`, SQL Server
-  migrations, and persistence queries.
+  booking lookup, seed/reset orchestration, and booking-rule behavior.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, deterministic
   room selection, and booking-rule behavior.
 - `HotelBooking.IntegrationTests`: API and SQL Server-backed EF Core tests for
   seed/reset, availability, booking creation, and booking lookup.
 
 Avoid separate `Application`, `Domain`, and `Infrastructure` projects. For this
-challenge, `Models` and `Services` are enough decomposition to show design
-thinking while keeping the implementation easy to review.
+challenge, `Models`, `Repository`, and `Services` are enough decomposition to
+show design thinking while keeping the implementation easy to review.
 
 ## Domain Model
 
@@ -236,7 +238,7 @@ clear and practical approach.
 ## Implementation Phases
 
 1. Create solution/projects.
-2. Add models and EF Core context.
+2. Add models and Repository EF Core context.
 3. Add services for seed/reset and booking rules.
 4. Add API controllers and Swagger.
 5. Add tests as each feature lands.

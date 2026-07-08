@@ -30,6 +30,7 @@ HotelBooking.sln
 src/
   HotelBooking.Api/
   HotelBooking.Models/
+  HotelBooking.Repository/
   HotelBooking.Services/
 tests/
   HotelBooking.UnitTests/
@@ -43,15 +44,18 @@ Project responsibilities:
   request/response DTOs, configuration, dependency registration.
 - `HotelBooking.Models`: simple domain/data models such as `Hotel`, `Room`,
   `Booking`, `RoomType`, and shared request/result types where useful.
-- `HotelBooking.Services`: booking/search use cases, EF Core `DbContext`,
-  SQL Server setup, seed/reset logic, and persistence queries.
+- `HotelBooking.Repository`: EF Core `DbContext`, SQL Server setup,
+  migrations, and persistence query helpers.
+- `HotelBooking.Services`: booking/search use cases, seed/reset logic, and
+  booking-rule behavior.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, room
   selection, and booking-rule behavior.
 - `HotelBooking.IntegrationTests`: API and SQL Server-backed EF Core tests for
   seed/reset, availability, booking creation, and lookup.
 
 Avoid adding separate `Application`, `Domain`, and `Infrastructure` projects.
-For this challenge, `Models` and `Services` are enough separation.
+For this challenge, `Models`, `Repository`, and `Services` are enough
+separation.
 
 ## Business Rules
 

@@ -149,7 +149,7 @@ Minimum design:
 For a challenge, it is acceptable to document:
 
 ```bash
-dotnet ef database update --project src/HotelBooking.Services --startup-project src/HotelBooking.Api
+dotnet ef database update --project src/HotelBooking.Repository --startup-project src/HotelBooking.Api
 ```
 
 If using Azure SQL, avoid printing passwords or connection strings in logs.

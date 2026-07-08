@@ -53,6 +53,7 @@ HotelBooking.sln
 src/
   HotelBooking.Api/
   HotelBooking.Models/
+  HotelBooking.Repository/
   HotelBooking.Services/
 tests/
   HotelBooking.UnitTests/
@@ -69,8 +70,10 @@ Suggested responsibilities:
   endpoint, configuration, and dependency registration.
 - `HotelBooking.Models`: hotel, room, booking, room type, capacity, and shared
   model/result types where useful.
-- `HotelBooking.Services`: booking/search use cases, EF Core `DbContext`,
-  SQL Server migrations, persistence queries, and seeding/reset.
+- `HotelBooking.Repository`: EF Core `DbContext`, SQL Server migrations,
+  persistence queries, and data access helpers.
+- `HotelBooking.Services`: booking/search use cases, seeding/reset, and
+  booking-rule behavior.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, room
   selection, and booking-rule behavior.
 - `HotelBooking.IntegrationTests`: SQL Server-backed EF Core and API tests.
