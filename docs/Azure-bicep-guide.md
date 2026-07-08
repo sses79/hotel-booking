@@ -43,8 +43,8 @@ Good hosting options:
 For this challenge, App Service is usually simpler. Container Apps is fine if
 the repository already has container build/deploy steps.
 
-Use Azure SQL if hosting in Azure. Use SQLite locally if that keeps development
-fast. EF Core can support both through configuration.
+Use SQL Server locally through Docker Compose and Azure SQL Database in Azure.
+This keeps EF Core behavior closer across local and hosted environments.
 
 ## Suggested Bicep Layout
 
@@ -180,7 +180,7 @@ The identity receives the smallest role needed.
 The app uses that identity instead of stored credentials where possible.
 ```
 
-For a small App Service plus Azure SQL deployment, password auth may be quicker.
+For a small Container Apps plus Azure SQL deployment, password auth may be quicker.
 For a stronger production-style submission, use managed identity for Azure
 resources and document the choice.
 
