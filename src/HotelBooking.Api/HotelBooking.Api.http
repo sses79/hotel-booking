@@ -1,6 +1,63 @@
-@HotelBooking.Api_HostAddress = http://localhost:0
+@HotelBooking.Api_HostAddress = https://localhost:5001
+@HotelId = 00000000-0000-0000-0000-000000000001
+@BookingReference = HB-000000
 
-GET {{HotelBooking.Api_HostAddress}}/weatherforecast/
+GET {{HotelBooking.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/swagger
+Accept: text/html
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/swagger/v1/swagger.json
+Accept: application/json
+
+###
+
+POST {{HotelBooking.Api_HostAddress}}/api/admin/seed
+Accept: application/json
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/api/hotels?name=Grand
+Accept: application/json
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/api/hotels/{{HotelId}}/rooms/available?checkIn=2026-08-01&checkOut=2026-08-03&guests=2
+Accept: application/json
+
+###
+
+POST {{HotelBooking.Api_HostAddress}}/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "hotelId": "{{HotelId}}",
+  "guestName": "Ada Lovelace",
+  "guestCount": 2,
+  "checkInDate": "2026-08-01",
+  "checkOutDate": "2026-08-03",
+  "roomType": "Double"
+}
+
+###
+
+GET {{HotelBooking.Api_HostAddress}}/api/bookings/{{BookingReference}}
+Accept: application/json
+
+###
+
+POST {{HotelBooking.Api_HostAddress}}/api/admin/reset
 Accept: application/json
 
 ###
