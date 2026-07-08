@@ -38,5 +38,8 @@ jobs:
       - name: Check whitespace
         run: git diff --check
 
+      - name: Validate shell scripts
+        run: bash -n scripts/check-azure-resources.sh
+
       - name: Validate Docker Compose
         run: docker compose --env-file .env.example -f infra/local/compose.yaml config --quiet

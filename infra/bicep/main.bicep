@@ -79,9 +79,6 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
   location: location
   tags: tags
   properties: {
-    appLogsConfiguration: {
-      destination: 'none'
-    }
     zoneRedundant: false
   }
 }
@@ -168,4 +165,3 @@ output apiUrl string = 'https://${apiApp.properties.configuration.ingress.fqdn}'
 output apiAppName string = apiApp.name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabase.name
-

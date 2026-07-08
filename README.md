@@ -237,6 +237,7 @@ date.
 - [Implementation Plan](docs/plan.md)
 - [Solve Challenge Guide](docs/solve-challenge-guide.md)
 - [Azure Bicep Guide](docs/Azure-bicep-guide.md)
+- [Azure Deployment Runbook](docs/Azure-deployment.md)
 
 ## Optional Azure Deployment
 
@@ -247,7 +248,7 @@ Public GHCR image -> Azure Container Apps Consumption -> Azure SQL serverless
 ```
 
 There is no Application Insights or Log Analytics workspace. Container Apps
-logging is set to `none` to avoid log-ingestion charges.
+has no application-log destination configured, avoiding log-ingestion charges.
 
 The `Publish API image` workflow runs after API-related changes reach `main`.
 It publishes only the immutable commit SHA tag:
