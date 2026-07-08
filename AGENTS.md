@@ -44,10 +44,10 @@ Project responsibilities:
 - `HotelBooking.Models`: simple domain/data models such as `Hotel`, `Room`,
   `Booking`, `RoomType`, and shared request/result types where useful.
 - `HotelBooking.Services`: booking/search use cases, EF Core `DbContext`,
-  database setup, seed/reset logic, and persistence queries.
+  SQL Server setup, seed/reset logic, and persistence queries.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, room
   selection, and booking-rule behavior.
-- `HotelBooking.IntegrationTests`: API and SQLite-backed EF Core tests for
+- `HotelBooking.IntegrationTests`: API and SQL Server-backed EF Core tests for
   seed/reset, availability, booking creation, and lookup.
 
 Avoid adding separate `Application`, `Domain`, and `Infrastructure` projects.
@@ -129,7 +129,8 @@ booking endpoint.
 
 ## Data And Testing
 
-- Prefer SQLite for local development and integration tests.
+- Prefer SQL Server for local development through Docker Compose, matching
+  Azure SQL Database more closely than SQLite.
 - Do not rely only on EF Core InMemory for relational behavior.
 - Add tests for availability, overlap, back-to-back bookings, capacity,
   booking reference lookup, seed, and reset.

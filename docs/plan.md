@@ -35,11 +35,11 @@ Responsibilities:
 - `HotelBooking.Models`: `Hotel`, `Room`, `Booking`, `RoomType`, shared enums,
   and simple result/request types where useful.
 - `HotelBooking.Services`: hotel search, room availability, booking creation,
-  booking lookup, seed/reset orchestration, EF Core `DbContext`, migrations,
-  and persistence queries.
+  booking lookup, seed/reset orchestration, EF Core `DbContext`, SQL Server
+  migrations, and persistence queries.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, deterministic
   room selection, and booking-rule behavior.
-- `HotelBooking.IntegrationTests`: API and SQLite-backed EF Core tests for
+- `HotelBooking.IntegrationTests`: API and SQL Server-backed EF Core tests for
   seed/reset, availability, booking creation, and booking lookup.
 
 Avoid separate `Application`, `Domain`, and `Infrastructure` projects. For this
@@ -96,7 +96,8 @@ EF Core configuration should include:
 - Room type stored as a readable string.
 - A unique index on `BookingReference`.
 - Relationships from hotel to rooms and room to bookings.
-- SQLite for local development by default.
+- SQL Server for local development through Docker Compose, matching Azure SQL
+  Database more closely than SQLite.
 
 ## API Surface
 
@@ -178,6 +179,28 @@ The seed endpoint should return useful identifiers:
   "roomsCreated": 6
 }
 ```
+
+## Local Data Store
+
+Use SQL Server locally so development and Azure use the same database family:
+
+```text
+Local:  SQL Server 2022 container through Docker Compose
+Azure:  Azure SQL Database serverless
+```
+
+Local Compose files:
+
+```text
+.env.example
+infra/local/compose.yaml
+```
+
+Operational commands for starting, stopping, and validating the local SQL Server
+container live in `README.md`.
+
+SQLite is no longer the default. The main local API path and relational
+integration tests should use SQL Server.
 
 ## Booking Algorithm
 
@@ -307,8 +330,9 @@ Automated coverage should focus on the rules most likely to break:
 
 Use `HotelBooking.UnitTests` for pure rules such as date overlap. Use
 `HotelBooking.IntegrationTests` for EF Core, seed/reset, and API behavior.
-Prefer SQLite-backed integration tests over EF Core InMemory when testing
-relational behavior.
+Prefer SQL Server-backed integration tests for booking persistence and
+availability behavior. Avoid relying only on EF Core InMemory because it does
+not behave like a relational database.
 
 ## Continuous Integration
 
@@ -330,6 +354,7 @@ dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
 dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers
 dotnet list HotelBooking.slnx package --vulnerable --include-transitive
 git diff --check
+docker compose --env-file .env.example -f infra/local/compose.yaml config --quiet
 ```
 
 CI must stay read-only. Do not add Azure credentials, GHCR publishing, or Azure
@@ -343,8 +368,10 @@ rules, testability, and a practical path to deployment.
 
 Key trade-offs to document in the README:
 
-- SQLite is used locally for speed and realistic relational behavior.
-- Azure SQL is the natural hosted database if Azure deployment is added.
+- SQL Server is used locally through Docker Compose so local behavior is close
+  to Azure SQL Database.
+- Azure SQL serverless is the natural hosted database if Azure deployment is
+  added.
 - Authentication is intentionally omitted because the challenge requires none.
 - Seed/reset endpoints are included because the challenge requests test data
   setup.

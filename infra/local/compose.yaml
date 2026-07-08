@@ -1,0 +1,24 @@
+name: hotel-booking
+
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      HOME: /var/opt/mssql
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    working_dir: /var/opt/mssql
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    networks:
+      - hotel-booking
+
+networks:
+  hotel-booking:
+
+volumes:
+  sql-data:

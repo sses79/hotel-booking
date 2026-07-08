@@ -70,10 +70,10 @@ Suggested responsibilities:
 - `HotelBooking.Models`: hotel, room, booking, room type, capacity, and shared
   model/result types where useful.
 - `HotelBooking.Services`: booking/search use cases, EF Core `DbContext`,
-  migrations, persistence queries, and seeding/reset.
+  SQL Server migrations, persistence queries, and seeding/reset.
 - `HotelBooking.UnitTests`: fast tests for date overlap, capacity, room
   selection, and booking-rule behavior.
-- `HotelBooking.IntegrationTests`: SQLite-backed EF Core and API tests.
+- `HotelBooking.IntegrationTests`: SQL Server-backed EF Core and API tests.
 
 ## Domain Model
 
@@ -194,12 +194,14 @@ the same time. For the challenge, still show awareness:
 
 ## EF Core Choices
 
-For the challenge, SQLite is a strong default:
+For the challenge, SQL Server is the best local default because Azure hosting
+will use Azure SQL Database:
 
-- It is easy to run locally.
-- It uses real relational constraints.
-- It is more realistic than EF Core InMemory for integration tests.
-- It can later be swapped for Azure SQL with minimal code changes.
+- It keeps local SQL behavior close to Azure.
+- It supports real relational constraints and transactions.
+- It avoids SQLite-specific differences in date handling, locking, and SQL
+  dialect.
+- It can run locally through Docker Compose.
 
 Recommended EF Core setup:
 
@@ -263,7 +265,7 @@ Include:
 
 Good trade-offs to mention:
 
-- SQLite chosen for simple local review; Azure SQL would be natural in Azure.
+- SQL Server chosen locally through Docker Compose to stay close to Azure SQL.
 - Race-condition protection is handled as far as practical for a challenge, with
   notes on stricter production options.
 - Authentication is intentionally omitted because the brief says it is not
