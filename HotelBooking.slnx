@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/HotelBooking.Api/HotelBooking.Api.csproj" />
     <Project Path="src/HotelBooking.Models/HotelBooking.Models.csproj" />
+    <Project Path="src/HotelBooking.Repository/HotelBooking.Repository.csproj" />
     <Project Path="src/HotelBooking.Services/HotelBooking.Services.csproj" />
   </Folder>
   <Folder Name="/tests/">

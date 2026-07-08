@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HotelBooking.Repository\HotelBooking.Repository.csproj" />
     <ProjectReference Include="..\HotelBooking.Services\HotelBooking.Services.csproj" />
     <ProjectReference Include="..\HotelBooking.Models\HotelBooking.Models.csproj" />
   </ItemGroup>
