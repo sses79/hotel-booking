@@ -4,6 +4,11 @@ namespace HotelBooking.Services;
 
 public static class BookingRules
 {
+    public static bool HasFutureCheckInDate(DateOnly checkInDate, DateOnly today)
+    {
+        return checkInDate > today;
+    }
+
     public static bool HasValidDateRange(DateOnly checkInDate, DateOnly checkOutDate)
     {
         return checkInDate < checkOutDate;

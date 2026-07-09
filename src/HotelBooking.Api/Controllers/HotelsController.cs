@@ -12,7 +12,8 @@ namespace HotelBooking.Api.Controllers;
 [Route("api/hotels")]
 public sealed class HotelsController(
     IHotelSearchService hotelSearchService,
-    IRoomAvailabilityService roomAvailabilityService)
+    IRoomAvailabilityService roomAvailabilityService,
+    TimeProvider timeProvider)
     : ControllerBase
 {
     [HttpGet]
@@ -39,6 +40,13 @@ public sealed class HotelsController(
         [FromQuery] RoomType? roomType,
         CancellationToken cancellationToken)
     {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+
+        if (!BookingRules.HasFutureCheckInDate(checkIn, today))
+        {
+            return Problem("Check-in date must be in the future.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
         if (!BookingRules.HasValidDateRange(checkIn, checkOut))
         {
             return Problem("Check-in date must be before check-out date.", statusCode: StatusCodes.Status400BadRequest);

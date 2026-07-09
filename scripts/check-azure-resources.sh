@@ -136,6 +136,12 @@ sql_auto_pause="$(az sql db show \
   --query autoPauseDelay \
   --output tsv)"
 
+sql_entra_administrator="$(az sql server ad-admin list \
+  --server "$sql_server_name" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query '[0].login' \
+  --output tsv)"
+
 application_insights_count="$(az resource list \
   --resource-group "$RESOURCE_GROUP" \
   --resource-type Microsoft.Insights/components \
@@ -169,6 +175,7 @@ health_response="$(curl \
 [[ "$sql_state" == "Online" || "$sql_state" == "Paused" ]]
 [[ "$sql_sku" == "GP_S_Gen5" ]]
 [[ "$sql_auto_pause" == "60" ]]
+[[ -n "$sql_entra_administrator" ]]
 [[ "$application_insights_count" == "0" ]]
 [[ "$log_analytics_count" == "0" ]]
 [[ "$health_response" == "Healthy" ]]
@@ -180,5 +187,6 @@ printf '%s\n' \
   "  Image: $api_image" \
   "  Scale: $min_replicas-$max_replicas replicas" \
   "  Azure SQL: $sql_database_name is $sql_state ($sql_sku, ${sql_auto_pause}-minute auto-pause)" \
+  "  SQL Entra administrator: $sql_entra_administrator" \
   "  Monitoring: no Application Insights or Log Analytics" \
   "  Health: $health_response"

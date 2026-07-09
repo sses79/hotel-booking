@@ -7,13 +7,23 @@ namespace HotelBooking.Services.Bookings;
 
 public sealed class BookingService(
     HotelBookingDbContext dbContext,
-    IRoomAvailabilityService roomAvailabilityService)
+    IRoomAvailabilityService roomAvailabilityService,
+    TimeProvider timeProvider)
     : IBookingService
 {
     public async Task<CreateBookingResult> CreateAsync(
         CreateBookingCommand command,
         CancellationToken cancellationToken = default)
     {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+
+        if (!BookingRules.HasFutureCheckInDate(command.CheckInDate, today))
+        {
+            return CreateBookingResult.Failed(
+                BookingCreateStatus.InvalidDateRange,
+                "Check-in date must be in the future.");
+        }
+
         if (!BookingRules.HasValidDateRange(command.CheckInDate, command.CheckOutDate))
         {
             return CreateBookingResult.Failed(

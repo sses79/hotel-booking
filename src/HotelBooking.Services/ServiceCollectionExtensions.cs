@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddHotelBookingServices(this IServiceCollection services)
     {
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<IHotelSearchService, HotelSearchService>();
         services.AddScoped<IRoomAvailabilityService, RoomAvailabilityService>();

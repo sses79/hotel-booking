@@ -12,6 +12,40 @@ Public GHCR image
 The deployment deliberately does not create Azure Container Registry, Key
 Vault, Application Insights, or Log Analytics.
 
+The development parameters configure the repository owner's tenant identity as
+the Azure SQL Microsoft Entra administrator. This enables portal Query Editor
+access while the Container App continues to use its SQL authentication secret.
+
+## Portal Query Editor
+
+Query Editor requires both:
+
+- A Microsoft Entra administrator on the SQL server.
+- A SQL firewall rule for the user's current public IP address.
+
+The Entra administrator is managed by Bicep. Add a narrow firewall rule when
+the current client IP changes:
+
+```bash
+az sql server firewall-rule create \
+  --resource-group rg-hotel-booking-dev-uk-south \
+  --server sql-hotel-booking-dev-qjygtiyk \
+  --name DeveloperClient \
+  --start-ip-address '<current-public-ip>' \
+  --end-ip-address '<current-public-ip>'
+```
+
+Remove local access when it is no longer needed:
+
+```bash
+az sql server firewall-rule delete \
+  --resource-group rg-hotel-booking-dev-uk-south \
+  --server sql-hotel-booking-dev-qjygtiyk \
+  --name DeveloperClient
+```
+
+Serverless SQL may need a short time to resume before Query Editor connects.
+
 ## Prerequisites
 
 - Azure CLI with Bicep support.
@@ -143,6 +177,7 @@ The script verifies:
 - Scale is configured from zero to two replicas.
 - No application-log destination is configured.
 - Azure SQL uses the serverless SKU and 60-minute auto-pause.
+- The Azure SQL server has a Microsoft Entra administrator.
 - Application Insights and Log Analytics are absent.
 - The deployed `/health` endpoint returns `Healthy`.
 
@@ -177,7 +212,8 @@ Open Swagger at:
 ```
 
 Azure SQL can take a little longer on the first seed request or after resuming
-from auto-pause.
+from auto-pause. The seed endpoint applies pending EF Core migrations before
+resetting and creating test data.
 
 ## Deploy A New API Version
 
@@ -191,6 +227,24 @@ from auto-pause.
 
 Bicep updates the Container App to the new immutable image. It does not require
 a new Azure resource group.
+
+### First Migration-Enabled Deployment
+
+The original demo database was created with `EnsureCreated` before EF migrations
+were introduced. It has no migration history, so recreate only the disposable
+database once before deploying the first migration-enabled image:
+
+```bash
+az sql db delete \
+  --resource-group rg-hotel-booking-dev-uk-south \
+  --server sql-hotel-booking-dev-qjygtiyk \
+  --name HotelBooking \
+  --yes
+```
+
+Then run the Bicep deployment and call `POST /api/admin/seed`. Bicep recreates
+the database, and the seed endpoint applies `InitialCreate` before inserting
+the six test rooms. This operation permanently removes existing demo bookings.
 
 ## Cost Controls
 
@@ -217,4 +271,3 @@ az group delete \
 ```
 
 Run this only when the demo environment is no longer needed.
-

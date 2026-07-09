@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBooking.Services.Rooms;
 
-public sealed class RoomAvailabilityService(HotelBookingDbContext dbContext) : IRoomAvailabilityService
+public sealed class RoomAvailabilityService(
+    HotelBookingDbContext dbContext,
+    TimeProvider timeProvider)
+    : IRoomAvailabilityService
 {
     public async Task<IReadOnlyList<AvailableRoomResult>> FindAvailableRoomsAsync(
         Guid hotelId,
@@ -14,7 +17,10 @@ public sealed class RoomAvailabilityService(HotelBookingDbContext dbContext) : I
         RoomType? roomType = null,
         CancellationToken cancellationToken = default)
     {
-        if (!BookingRules.HasValidDateRange(checkInDate, checkOutDate)
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+
+        if (!BookingRules.HasFutureCheckInDate(checkInDate, today)
+            || !BookingRules.HasValidDateRange(checkInDate, checkOutDate)
             || !BookingRules.HasValidGuestCount(guests))
         {
             return [];
