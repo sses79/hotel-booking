@@ -199,26 +199,28 @@ infra/local/compose.yaml
 ```
 
 Operational commands for starting, stopping, and validating the local SQL Server
-container live in `README.md`.
+container live in `README.md`. Automated integration tests use
+`Testcontainers.MsSql` to start a disposable SQL Server and create an isolated
+database for each test host.
 
 SQLite is no longer the default. The main local API path and relational
-integration tests should use SQL Server.
+integration tests use SQL Server. EF Core migrations create and update schemas
+in local, test, and Azure environments.
 
 ## Booking Algorithm
 
 Booking creation is the most important workflow.
 
-1. Validate that `checkInDate < checkOutDate`.
+1. Validate that check-in is in the future and `checkInDate < checkOutDate`.
 2. Validate that `guestCount >= 1`.
 3. Load the requested hotel.
-4. Find candidate rooms by hotel, optional room type, and capacity.
-5. Exclude rooms with overlapping bookings.
-6. Pick one deterministic room.
-7. Generate a unique booking reference.
-8. Start a database transaction.
-9. Recheck availability inside the transaction.
-10. Save the booking.
-11. Return `201 Created` with the booking details.
+4. Start a database transaction.
+5. Find candidate rooms by hotel, optional room type, and capacity.
+6. Exclude rooms with overlapping bookings.
+7. Pick one deterministic room.
+8. Generate a unique booking reference.
+9. Save the booking and commit the transaction.
+10. Return `201 Created` with the booking details.
 
 Use this overlap rule:
 
@@ -232,8 +234,11 @@ used for the requested stay.
 
 For production-level double-booking prevention, document that stricter database
 locking, serializable isolation, or provider-specific constraints may be needed.
-For the challenge, a transaction plus an internal availability recheck is a
+For the challenge, a transaction plus an internal availability check is a
 clear and practical approach.
+
+The recommended production-hardening path is documented in
+`docs/booking-concurrency-future-improvement.md`.
 
 ## Implementation Phases
 
@@ -339,9 +344,10 @@ Automated coverage should focus on the rules most likely to break:
 
 Use `HotelBooking.UnitTests` for pure rules such as date overlap. Use
 `HotelBooking.IntegrationTests` for EF Core, seed/reset, and API behavior.
-Prefer SQL Server-backed integration tests for booking persistence and
-availability behavior. Avoid relying only on EF Core InMemory because it does
-not behave like a relational database.
+Integration tests use a disposable SQL Server through Testcontainers for
+booking persistence, migrations, relational constraints, transactions, and
+availability behavior. EF Core InMemory is intentionally not used because it
+does not behave like a relational database.
 
 ## Continuous Integration
 

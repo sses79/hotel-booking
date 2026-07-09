@@ -17,6 +17,8 @@ param apiImageTag string
 
 param apiImageRepository string = 'ghcr.io/sses79/hotel-booking-api'
 param sqlAdministratorLogin string = 'hoteladmin'
+param sqlEntraAdministratorLogin string
+param sqlEntraAdministratorObjectId string
 
 @secure()
 param sqlAdministratorPassword string
@@ -51,6 +53,17 @@ resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01' = {
   properties: {
     startIpAddress: '0.0.0.0'
     endIpAddress: '0.0.0.0'
+  }
+}
+
+resource sqlEntraAdministrator 'Microsoft.Sql/servers/administrators@2023-08-01' = {
+  parent: sqlServer
+  name: 'ActiveDirectory'
+  properties: {
+    administratorType: 'ActiveDirectory'
+    login: sqlEntraAdministratorLogin
+    sid: sqlEntraAdministratorObjectId
+    tenantId: subscription().tenantId
   }
 }
 

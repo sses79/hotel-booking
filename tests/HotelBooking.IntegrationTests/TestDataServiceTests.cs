@@ -1,3 +1,4 @@
+using HotelBooking.IntegrationTests.Infrastructure;
 using HotelBooking.Models;
 using HotelBooking.Repository.Data;
 using HotelBooking.Services.TestData;
@@ -5,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBooking.IntegrationTests;
 
-public sealed class TestDataServiceTests
+[Collection(SqlServerCollection.Name)]
+public sealed class TestDataServiceTests(SqlServerFixture sqlServer)
 {
     [Fact]
     public async Task Seed_creates_expected_hotel_and_six_rooms()
@@ -75,14 +77,14 @@ public sealed class TestDataServiceTests
         Assert.Equal(0, await database.Context.Hotels.CountAsync());
     }
 
-    private static async Task<TestDatabase> CreateDatabaseAsync()
+    private async Task<TestDatabase> CreateDatabaseAsync()
     {
         var options = new DbContextOptionsBuilder<HotelBookingDbContext>()
-            .UseInMemoryDatabase($"HotelBookingTests-{Guid.NewGuid()}")
+            .UseSqlServer(sqlServer.CreateConnectionString())
             .Options;
 
         var context = new HotelBookingDbContext(options);
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         return new TestDatabase(context);
     }

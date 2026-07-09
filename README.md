@@ -14,6 +14,9 @@ The goal is to build a practical ASP.NET Core and EF Core REST API that can:
 The solution intentionally stays small and reviewer-friendly. It is not a hotel
 management platform.
 
+Deployed API:
+[Azure Swagger UI](https://ca-hotel-booking-dev-qjygtiyk.agreeableriver-d928ad99.uksouth.azurecontainerapps.io/swagger)
+
 ## Project Structure
 
 ```text
@@ -41,7 +44,11 @@ docs/
 
 ## Build And Test
 
+Docker must be running because integration tests start a disposable SQL Server
+container and apply the real EF Core migrations.
+
 ```bash
+dotnet tool restore
 dotnet restore HotelBooking.slnx
 dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
 dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers
@@ -107,6 +114,27 @@ GET /swagger/v1/swagger.json
 
 Local development uses SQL Server in Docker Compose so local EF Core behavior is
 close to Azure SQL Database.
+
+Schema changes are managed through EF Core migrations. Seed/reset applies any
+pending migrations before changing test data.
+
+Create a migration after changing the EF model:
+
+```bash
+ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations add <MigrationName> \
+  --project src/HotelBooking.Repository/HotelBooking.Repository.csproj \
+  --startup-project src/HotelBooking.Api/HotelBooking.Api.csproj \
+  --output-dir Data/Migrations
+```
+
+Existing local databases created before `InitialCreate` have no migration
+history. Recreate the disposable local volume once before running the
+migration-enabled version:
+
+```bash
+docker compose --env-file .env -f infra/local/compose.yaml down -v
+docker compose --env-file .env -f infra/local/compose.yaml up -d sql
+```
 
 Validate the Compose file:
 
@@ -218,7 +246,7 @@ curl "$BASE_URL/api/bookings/HB-123456"
 
 Dates use `yyyy-MM-dd` format. A booking uses a half-open date range:
 `[checkInDate, checkOutDate)`, so a room can be booked again on the checkout
-date.
+date. Check-in must be later than the current UTC date.
 
 ## Design Notes
 
@@ -227,17 +255,36 @@ date.
 - No authentication is included because the challenge does not require it.
 - Seed/reset endpoints are intentionally available because the challenge asks
   for test data setup.
-- The booking service uses a transaction and an internal availability recheck.
+- The booking service checks availability inside a transaction before saving.
   A production system could add stronger provider-specific locking or database
   constraints for heavy concurrent booking traffic.
 
 ## Documentation
 
 - [Challenge Brief](challenge.md)
+- [Challenge Solution Summary](docs/hotel-booking-challenge-solution.md)
+- [Booking Concurrency Future Improvement](docs/booking-concurrency-future-improvement.md)
 - [Implementation Plan](docs/plan.md)
 - [Solve Challenge Guide](docs/solve-challenge-guide.md)
 - [Azure Bicep Guide](docs/Azure-bicep-guide.md)
 - [Azure Deployment Runbook](docs/Azure-deployment.md)
+
+## Deployed Azure Resources
+
+The main environment is deployed in `rg-hotel-booking-dev-uk-south`.
+
+### Container App
+
+`ca-hotel-booking-dev-qjygtiyk` hosts the public ASP.NET Core API:
+
+![Deployed Azure Container App](docs/image/azure-container-app.png)
+
+### Azure SQL Database
+
+`HotelBooking` runs on the serverless SQL server
+`sql-hotel-booking-dev-qjygtiyk`:
+
+![Deployed Azure SQL Database](docs/image/azure-sql-database.png)
 
 ## Optional Azure Deployment
 
@@ -307,6 +354,7 @@ data.
 GitHub Actions runs:
 
 - restore, build, and test
+- EF Core migration drift validation
 - Bicep compilation
 - whitespace check
 - Docker Compose config validation

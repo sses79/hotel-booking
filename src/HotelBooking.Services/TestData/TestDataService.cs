@@ -22,7 +22,7 @@ public sealed class TestDataService(HotelBookingDbContext dbContext) : ITestData
 
     public async Task ResetAsync(CancellationToken cancellationToken = default)
     {
-        await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        await dbContext.Database.MigrateAsync(cancellationToken);
 
         var bookings = await dbContext.Bookings.ToListAsync(cancellationToken);
         dbContext.Bookings.RemoveRange(bookings);

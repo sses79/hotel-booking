@@ -18,11 +18,23 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Restore
         run: dotnet restore HotelBooking.slnx
 
       - name: Build
         run: dotnet build HotelBooking.slnx --no-restore -m:1 --disable-build-servers
+
+      - name: Check migration drift
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/HotelBooking.Repository/HotelBooking.Repository.csproj
+          --startup-project src/HotelBooking.Api/HotelBooking.Api.csproj
+          --no-build
 
       - name: Test
         run: dotnet test HotelBooking.slnx --no-restore --no-build -m:1 --disable-build-servers

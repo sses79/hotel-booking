@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using HotelBooking.IntegrationTests.Infrastructure;
 using HotelBooking.Models;
 using HotelBooking.Services.TestData;
 
 namespace HotelBooking.IntegrationTests.Api;
 
-public sealed class ApiEndpointTests
+[Collection(SqlServerCollection.Name)]
+public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -17,7 +19,7 @@ public sealed class ApiEndpointTests
     [Fact]
     public async Task OpenApi_endpoint_is_available()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync("/openapi/v1.json");
@@ -28,7 +30,7 @@ public sealed class ApiEndpointTests
     [Fact]
     public async Task Swagger_ui_is_available()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync("/swagger");
@@ -40,7 +42,7 @@ public sealed class ApiEndpointTests
     [Fact]
     public async Task Seed_then_search_hotels_returns_seeded_hotel()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
 
         using var seedResponse = await client.PostAsync("/api/admin/seed", null);
@@ -58,24 +60,41 @@ public sealed class ApiEndpointTests
     [Fact]
     public async Task Availability_returns_rooms_matching_guest_count()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
+        var checkIn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
+        var checkOut = checkIn.AddDays(2);
 
         await client.PostAsync("/api/admin/seed", null);
 
         var rooms = await GetFromJsonAsync<List<AvailableRoomDto>>(
             client,
-            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn=2026-08-01&checkOut=2026-08-03&guests=2",
+            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={checkIn:yyyy-MM-dd}&checkOut={checkOut:yyyy-MM-dd}&guests=2",
             JsonOptions);
 
         Assert.Equal(["201", "202", "301", "302"], rooms!.Select(room => room.RoomNumber));
     }
 
     [Fact]
+    public async Task Availability_rejects_check_in_date_that_is_not_in_the_future()
+    {
+        await using var factory = new HotelBookingApiFactory(sqlServer);
+        using var client = factory.CreateClient();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        using var response = await client.GetAsync(
+            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={today:yyyy-MM-dd}&checkOut={today.AddDays(2):yyyy-MM-dd}&guests=2");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Booking_workflow_creates_and_returns_booking()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
+        var checkIn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
+        var checkOut = checkIn.AddDays(2);
 
         await client.PostAsync("/api/admin/seed", null);
 
@@ -86,8 +105,8 @@ public sealed class ApiEndpointTests
                 HotelId = SeedData.GrandPlazaHotelId,
                 GuestName = "Ada Lovelace",
                 GuestCount = 2,
-                CheckInDate = new DateOnly(2026, 8, 1),
-                CheckOutDate = new DateOnly(2026, 8, 3),
+                CheckInDate = checkIn,
+                CheckOutDate = checkOut,
                 RoomType = RoomType.Double
             },
             JsonOptions);
@@ -99,7 +118,7 @@ public sealed class ApiEndpointTests
             JsonOptions);
         var remainingRooms = await GetFromJsonAsync<List<AvailableRoomDto>>(
             client,
-            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn=2026-08-01&checkOut=2026-08-03&guests=2",
+            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={checkIn:yyyy-MM-dd}&checkOut={checkOut:yyyy-MM-dd}&guests=2",
             JsonOptions);
 
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
@@ -111,9 +130,32 @@ public sealed class ApiEndpointTests
     }
 
     [Fact]
+    public async Task Booking_rejects_check_in_date_that_is_not_in_the_future()
+    {
+        await using var factory = new HotelBookingApiFactory(sqlServer);
+        using var client = factory.CreateClient();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var response = await client.PostAsJsonAsync(
+            "/api/bookings",
+            new
+            {
+                HotelId = SeedData.GrandPlazaHotelId,
+                GuestName = "Ada Lovelace",
+                GuestCount = 2,
+                CheckInDate = today,
+                CheckOutDate = today.AddDays(2),
+                RoomType = RoomType.Double
+            },
+            JsonOptions);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Reset_clears_seeded_data()
     {
-        await using var factory = new HotelBookingApiFactory();
+        await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
 
         await client.PostAsync("/api/admin/seed", null);

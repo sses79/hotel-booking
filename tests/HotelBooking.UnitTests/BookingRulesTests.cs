@@ -6,6 +6,26 @@ namespace HotelBooking.UnitTests;
 public sealed class BookingRulesTests
 {
     [Fact]
+    public void Check_in_date_must_be_after_today()
+    {
+        var today = new DateOnly(2026, 7, 9);
+
+        Assert.True(BookingRules.HasFutureCheckInDate(today.AddDays(1), today));
+        Assert.False(BookingRules.HasFutureCheckInDate(today, today));
+        Assert.False(BookingRules.HasFutureCheckInDate(today.AddDays(-1), today));
+    }
+
+    [Fact]
+    public void Check_out_date_must_be_after_check_in_date()
+    {
+        var checkIn = new DateOnly(2026, 8, 1);
+
+        Assert.True(BookingRules.HasValidDateRange(checkIn, checkIn.AddDays(1)));
+        Assert.False(BookingRules.HasValidDateRange(checkIn, checkIn));
+        Assert.False(BookingRules.HasValidDateRange(checkIn, checkIn.AddDays(-1)));
+    }
+
+    [Fact]
     public void Overlap_returns_true_when_date_ranges_share_a_night()
     {
         var overlaps = BookingRules.DateRangesOverlap(

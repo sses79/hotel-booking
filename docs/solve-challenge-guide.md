@@ -1,9 +1,8 @@
 # Solve Challenge Guide
 
 This guide is for solving the hotel booking API challenge in `challenge.md`.
-It borrows the useful habits from `/Users/tim/Yun/FlightBooking`: start with
-the business rules, protect behavior with tests, keep the UI/API thin, and put
-important decisions in named domain code.
+Start with the business rules, protect behavior with tests, keep the API thin,
+and put important decisions in named domain code.
 
 The 80/20 rule here: most of the value comes from a small number of choices.
 Model the domain clearly, make availability correct, keep booking creation
@@ -25,9 +24,9 @@ you think. A good submission should make these things obvious:
 Do not try to build a hotel platform. Build the smallest hotel room booking API
 that proves the rules.
 
-## Lessons From FlightBooking
+## Core Workflow Lessons
 
-`FlightBooking` is useful because it shows a clean challenge workflow:
+A clean challenge workflow should:
 
 - Capture baseline behavior before changing code.
 - Split calculation, formatting, and rules into separate classes.
