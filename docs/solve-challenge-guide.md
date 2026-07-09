@@ -174,25 +174,23 @@ Document whichever choice is made.
 
 Booking is the one operation that must be careful:
 
-1. Validate dates: check-in must be before check-out.
+1. Validate dates: check-in must be in the future and before check-out.
 2. Validate guest count: at least 1 guest.
 3. Find the hotel.
 4. Find rooms with enough capacity.
 5. Remove rooms that overlap existing bookings.
 6. Pick one room deterministically.
 7. Generate a unique booking reference.
-8. Save the booking in one transaction.
+8. Save the booking in a serializable transaction with bounded retries.
 9. Return `201 Created` with the booking details.
 
-For a real system, database constraints matter because two users can book at
-the same time. For the challenge, still show awareness:
+Concurrent requests can target the same final room. Enforce the rule in the
+database transaction:
 
 - Add an index on `BookingReference`.
-- Wrap booking creation in a transaction.
-- Recheck availability inside the transaction.
-- Mention that strict prevention of race-condition double booking may require
-  database locking, serializable isolation, or a provider-specific exclusion
-  constraint.
+- Use serializable isolation for booking creation.
+- Run the complete transaction inside SQL Server's retry strategy.
+- Test two requests competing for the final room against real SQL Server.
 
 ## EF Core Choices
 
@@ -268,8 +266,8 @@ Include:
 Good trade-offs to mention:
 
 - SQL Server chosen locally through Docker Compose to stay close to Azure SQL.
-- Race-condition protection is handled as far as practical for a challenge, with
-  notes on stricter production options.
+- Serializable isolation and SQL Server retries prevent concurrent
+  double-booking; idempotency remains a separate production improvement.
 - Authentication is intentionally omitted because the brief says it is not
   required.
 

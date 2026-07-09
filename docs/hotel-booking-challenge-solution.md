@@ -69,7 +69,8 @@ existing.CheckInDate < requested.CheckOutDate
 - Available rooms are ordered deterministically by capacity, room type, and
   room number.
 - Booking references have a unique database index.
-- Booking creation checks availability inside a transaction before saving.
+- Booking creation checks availability inside a serializable transaction with
+  bounded SQL Server retries.
 
 Invalid requests use ASP.NET Core `ProblemDetails`.
 
@@ -125,15 +126,15 @@ SQL configuration, absence of paid monitoring resources, and API health.
 Application Insights, Log Analytics, Azure Container Registry, authentication,
 and a frontend are deliberately outside this challenge's scope.
 
-## Main Trade-Off
+## Concurrency
 
-The transaction and in-transaction availability check are appropriate for this
-challenge. A high-traffic production system should add stronger SQL-specific
-concurrency control to prevent two simultaneous requests from selecting the
-same final room. This is documented rather than hidden behind unnecessary
-complexity.
+Concurrent requests cannot book the same final room. SQL Server serializable
+isolation protects the availability range, while bounded retries replay a
+transaction selected as a transient failure or deadlock victim. A deterministic
+SQL Server integration test verifies one request succeeds and one returns
+`409 Conflict`.
 
 See [README](../README.md), [implementation plan](plan.md), and
 [Azure deployment runbook](Azure-deployment.md) for detailed commands. See
-[booking concurrency future improvement](booking-concurrency-future-improvement.md)
-for the production-hardening design.
+[booking concurrency](booking-concurrency.md) for the implementation details
+and remaining production considerations.

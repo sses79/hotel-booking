@@ -3,6 +3,7 @@ using HotelBooking.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace HotelBooking.IntegrationTests.Api;
 
-public sealed class HotelBookingApiFactory(SqlServerFixture sqlServer)
+public sealed class HotelBookingApiFactory(
+    SqlServerFixture sqlServer,
+    DbCommandInterceptor? commandInterceptor = null)
     : WebApplicationFactory<Program>
 {
     private readonly string _connectionString = sqlServer.CreateConnectionString();
@@ -28,7 +31,19 @@ public sealed class HotelBookingApiFactory(SqlServerFixture sqlServer)
             services.RemoveAll<HotelBookingDbContext>();
 
             services.AddDbContext<HotelBookingDbContext>(options =>
-                options.UseSqlServer(_connectionString));
+            {
+                options.UseSqlServer(
+                    _connectionString,
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(2),
+                        errorNumbersToAdd: null));
+
+                if (commandInterceptor is not null)
+                {
+                    options.AddInterceptors(commandInterceptor);
+                }
+            });
         });
     }
 

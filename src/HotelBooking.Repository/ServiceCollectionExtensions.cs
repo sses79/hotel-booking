@@ -22,7 +22,12 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddDbContext<HotelBookingDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlServer(
+                connectionString,
+                sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(2),
+                    errorNumbersToAdd: null)));
 
         return services;
     }

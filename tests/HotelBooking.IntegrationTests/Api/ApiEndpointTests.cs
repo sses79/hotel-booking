@@ -4,7 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using HotelBooking.IntegrationTests.Infrastructure;
 using HotelBooking.Models;
+using HotelBooking.Repository.Data;
 using HotelBooking.Services.TestData;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HotelBooking.IntegrationTests.Api;
 
@@ -153,6 +156,59 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
     }
 
     [Fact]
+    public async Task Concurrent_requests_cannot_double_book_the_last_available_room()
+    {
+        var barrier = new AvailabilityBarrierInterceptor();
+        await using var factory = new HotelBookingApiFactory(sqlServer, barrier);
+        using var client = factory.CreateClient();
+        var checkIn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(60);
+        var checkOut = checkIn.AddDays(2);
+
+        await client.PostAsync("/api/admin/seed", null);
+
+        using var firstBooking = await CreateBookingAsync(
+            client,
+            "First guest",
+            checkIn,
+            checkOut);
+        Assert.Equal(HttpStatusCode.Created, firstBooking.StatusCode);
+
+        barrier.Arm();
+
+        var concurrentResponses = await Task.WhenAll(
+            CreateBookingAsync(client, "Second guest", checkIn, checkOut),
+            CreateBookingAsync(client, "Third guest", checkIn, checkOut));
+
+        try
+        {
+            Assert.Equal(
+                1,
+                concurrentResponses.Count(response => response.StatusCode == HttpStatusCode.Created));
+            Assert.Equal(
+                1,
+                concurrentResponses.Count(response => response.StatusCode == HttpStatusCode.Conflict));
+
+            await using var scope = factory.Services.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<HotelBookingDbContext>();
+            var bookings = await dbContext.Bookings
+                .Where(booking =>
+                    booking.CheckInDate < checkOut
+                    && checkIn < booking.CheckOutDate)
+                .ToListAsync();
+
+            Assert.Equal(2, bookings.Count);
+            Assert.Equal(2, bookings.Select(booking => booking.RoomId).Distinct().Count());
+        }
+        finally
+        {
+            foreach (var response in concurrentResponses)
+            {
+                response.Dispose();
+            }
+        }
+    }
+
+    [Fact]
     public async Task Reset_clears_seeded_data()
     {
         await using var factory = new HotelBookingApiFactory(sqlServer);
@@ -210,5 +266,25 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
             $"Expected success but got {(int)response.StatusCode} {response.StatusCode}: {body}");
 
         return JsonSerializer.Deserialize<T>(body, jsonOptions);
+    }
+
+    private static Task<HttpResponseMessage> CreateBookingAsync(
+        HttpClient client,
+        string guestName,
+        DateOnly checkIn,
+        DateOnly checkOut)
+    {
+        return client.PostAsJsonAsync(
+            "/api/bookings",
+            new
+            {
+                HotelId = SeedData.GrandPlazaHotelId,
+                GuestName = guestName,
+                GuestCount = 2,
+                CheckInDate = checkIn,
+                CheckOutDate = checkOut,
+                RoomType = RoomType.Double
+            },
+            JsonOptions);
     }
 }
