@@ -255,15 +255,15 @@ date. Check-in must be later than the current UTC date.
 - No authentication is included because the challenge does not require it.
 - Seed/reset endpoints are intentionally available because the challenge asks
   for test data setup.
-- The booking service checks availability inside a transaction before saving.
-  A production system could add stronger provider-specific locking or database
-  constraints for heavy concurrent booking traffic.
+- The booking service checks availability inside a serializable transaction.
+  SQL Server retries transient concurrency failures, and integration tests
+  verify concurrent requests cannot double book the final room.
 
 ## Documentation
 
 - [Challenge Brief](challenge.md)
 - [Challenge Solution Summary](docs/hotel-booking-challenge-solution.md)
-- [Booking Concurrency Future Improvement](docs/booking-concurrency-future-improvement.md)
+- [Booking Concurrency](docs/booking-concurrency.md)
 - [Implementation Plan](docs/plan.md)
 - [Solve Challenge Guide](docs/solve-challenge-guide.md)
 - [Azure Bicep Guide](docs/Azure-bicep-guide.md)

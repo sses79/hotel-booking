@@ -1,3 +1,4 @@
+using System.Data;
 using HotelBooking.Models;
 using HotelBooking.Repository.Data;
 using HotelBooking.Services.Rooms;
@@ -50,17 +51,19 @@ public sealed class BookingService(
 
         var strategy = dbContext.Database.CreateExecutionStrategy();
 
-        return await strategy.ExecuteAsync(async () =>
+        var bookingReference = await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
+
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable,
+                cancellationToken);
 
             var room = await FindFirstAvailableRoomAsync(command, cancellationToken);
 
             if (room is null)
             {
-                return CreateBookingResult.Failed(
-                    BookingCreateStatus.NoRoomAvailable,
-                    "No room is available for the requested stay and guest count.");
+                return null;
             }
 
             var booking = new Booking
@@ -78,10 +81,19 @@ public sealed class BookingService(
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            var details = await GetByReferenceAsync(booking.BookingReference, cancellationToken);
-
-            return CreateBookingResult.Created(details!);
+            return booking.BookingReference;
         });
+
+        if (bookingReference is null)
+        {
+            return CreateBookingResult.Failed(
+                BookingCreateStatus.NoRoomAvailable,
+                "No room is available for the requested stay and guest count.");
+        }
+
+        var details = await GetByReferenceAsync(bookingReference, cancellationToken);
+
+        return CreateBookingResult.Created(details!);
     }
 
     public async Task<BookingDetailsResult?> GetByReferenceAsync(

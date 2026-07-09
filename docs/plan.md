@@ -232,13 +232,10 @@ existing.CheckInDate < requested.CheckOutDate
 If that expression is true, the two date ranges overlap and the room cannot be
 used for the requested stay.
 
-For production-level double-booking prevention, document that stricter database
-locking, serializable isolation, or provider-specific constraints may be needed.
-For the challenge, a transaction plus an internal availability check is a
-clear and practical approach.
-
-The recommended production-hardening path is documented in
-`docs/booking-concurrency-future-improvement.md`.
+Booking creation uses a serializable transaction and SQL Server's bounded retry
+strategy. This prevents concurrent requests from booking the same final room.
+The implementation and deterministic SQL Server concurrency test are documented
+in `docs/booking-concurrency.md`.
 
 ## Implementation Phases
 
@@ -333,6 +330,7 @@ Automated coverage should focus on the rules most likely to break:
 
 - Hotel search by name returns the expected hotel.
 - Availability excludes overlapping bookings.
+- Concurrent requests cannot double book the final available room.
 - Back-to-back bookings are allowed.
 - Guest count cannot exceed room capacity.
 - A booking uses one room for the whole stay.
@@ -391,5 +389,5 @@ Key trade-offs to document in the README:
 - Authentication is intentionally omitted because the challenge requires none.
 - Seed/reset endpoints are included because the challenge requests test data
   setup.
-- Stronger race-condition handling is a production concern and can be improved
-  with database-specific locking or constraints.
+- Serializable transactions and SQL Server retries enforce the no-double-booking
+  rule under concurrent requests.
