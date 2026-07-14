@@ -174,7 +174,7 @@ Document whichever choice is made.
 
 Booking is the one operation that must be careful:
 
-1. Validate dates: check-in must be in the future and before check-out.
+1. Validate dates: check-in must be today or later and before check-out.
 2. Validate guest count: at least 1 guest.
 3. Find the hotel.
 4. Find rooms with enough capacity.

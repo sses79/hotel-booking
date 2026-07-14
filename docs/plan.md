@@ -211,7 +211,7 @@ in local, test, and Azure environments.
 
 Booking creation is the most important workflow.
 
-1. Validate that check-in is in the future and `checkInDate < checkOutDate`.
+1. Validate that check-in is today or later and `checkInDate < checkOutDate`.
 2. Validate that `guestCount >= 1`.
 3. Load the requested hotel.
 4. Start a database transaction.

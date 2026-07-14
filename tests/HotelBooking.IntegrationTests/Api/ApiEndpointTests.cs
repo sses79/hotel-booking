@@ -79,16 +79,31 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
     }
 
     [Fact]
-    public async Task Availability_rejects_check_in_date_that_is_not_in_the_future()
+    public async Task Availability_rejects_check_in_date_that_is_in_the_past()
     {
         await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         using var response = await client.GetAsync(
-            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={today:yyyy-MM-dd}&checkOut={today.AddDays(2):yyyy-MM-dd}&guests=2");
+            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={today.AddDays(-1):yyyy-MM-dd}&checkOut={today.AddDays(1):yyyy-MM-dd}&guests=2");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Availability_allows_check_in_today()
+    {
+        await using var factory = new HotelBookingApiFactory(sqlServer);
+        using var client = factory.CreateClient();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        await client.PostAsync("/api/admin/seed", null);
+
+        using var response = await client.GetAsync(
+            $"/api/hotels/{SeedData.GrandPlazaHotelId}/rooms/available?checkIn={today:yyyy-MM-dd}&checkOut={today.AddDays(1):yyyy-MM-dd}&guests=2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -133,7 +148,7 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
     }
 
     [Fact]
-    public async Task Booking_rejects_check_in_date_that_is_not_in_the_future()
+    public async Task Booking_rejects_check_in_date_that_is_in_the_past()
     {
         await using var factory = new HotelBookingApiFactory(sqlServer);
         using var client = factory.CreateClient();
@@ -146,13 +161,38 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
                 HotelId = SeedData.GrandPlazaHotelId,
                 GuestName = "Ada Lovelace",
                 GuestCount = 2,
-                CheckInDate = today,
-                CheckOutDate = today.AddDays(2),
+                CheckInDate = today.AddDays(-1),
+                CheckOutDate = today.AddDays(1),
                 RoomType = RoomType.Double
             },
             JsonOptions);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Booking_allows_check_in_today()
+    {
+        await using var factory = new HotelBookingApiFactory(sqlServer);
+        using var client = factory.CreateClient();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        await client.PostAsync("/api/admin/seed", null);
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/bookings",
+            new
+            {
+                HotelId = SeedData.GrandPlazaHotelId,
+                GuestName = "Same-day guest",
+                GuestCount = 2,
+                CheckInDate = today,
+                CheckOutDate = today.AddDays(1),
+                RoomType = RoomType.Double
+            },
+            JsonOptions);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

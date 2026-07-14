@@ -18,11 +18,11 @@ public sealed class BookingService(
     {
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
-        if (!BookingRules.HasFutureCheckInDate(command.CheckInDate, today))
+        if (!BookingRules.HasNonPastCheckInDate(command.CheckInDate, today))
         {
             return CreateBookingResult.Failed(
                 BookingCreateStatus.InvalidDateRange,
-                "Check-in date must be in the future.");
+                "Check-in date cannot be in the past.");
         }
 
         if (!BookingRules.HasValidDateRange(command.CheckInDate, command.CheckOutDate))
