@@ -19,7 +19,7 @@ public sealed class RoomAvailabilityService(
     {
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
-        if (!BookingRules.HasFutureCheckInDate(checkInDate, today)
+        if (!BookingRules.HasNonPastCheckInDate(checkInDate, today)
             || !BookingRules.HasValidDateRange(checkInDate, checkOutDate)
             || !BookingRules.HasValidGuestCount(guests))
         {

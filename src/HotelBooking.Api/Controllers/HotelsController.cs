@@ -42,9 +42,9 @@ public sealed class HotelsController(
     {
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
-        if (!BookingRules.HasFutureCheckInDate(checkIn, today))
+        if (!BookingRules.HasNonPastCheckInDate(checkIn, today))
         {
-            return Problem("Check-in date must be in the future.", statusCode: StatusCodes.Status400BadRequest);
+            return Problem("Check-in date cannot be in the past.", statusCode: StatusCodes.Status400BadRequest);
         }
 
         if (!BookingRules.HasValidDateRange(checkIn, checkOut))

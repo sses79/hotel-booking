@@ -6,13 +6,13 @@ namespace HotelBooking.UnitTests;
 public sealed class BookingRulesTests
 {
     [Fact]
-    public void Check_in_date_must_be_after_today()
+    public void Check_in_date_cannot_be_before_today()
     {
         var today = new DateOnly(2026, 7, 9);
 
-        Assert.True(BookingRules.HasFutureCheckInDate(today.AddDays(1), today));
-        Assert.False(BookingRules.HasFutureCheckInDate(today, today));
-        Assert.False(BookingRules.HasFutureCheckInDate(today.AddDays(-1), today));
+        Assert.True(BookingRules.HasNonPastCheckInDate(today.AddDays(1), today));
+        Assert.True(BookingRules.HasNonPastCheckInDate(today, today));
+        Assert.False(BookingRules.HasNonPastCheckInDate(today.AddDays(-1), today));
     }
 
     [Fact]
