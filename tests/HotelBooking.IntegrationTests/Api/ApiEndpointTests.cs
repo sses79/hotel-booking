@@ -249,6 +249,61 @@ public sealed class ApiEndpointTests(SqlServerFixture sqlServer)
     }
 
     [Fact]
+    public async Task Concurrent_back_to_back_requests_can_book_the_same_room()
+    {
+        var barrier = new AvailabilityBarrierInterceptor();
+        await using var factory = new HotelBookingApiFactory(sqlServer, barrier);
+        using var client = factory.CreateClient();
+        var firstCheckIn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(90);
+        var firstCheckOut = firstCheckIn.AddDays(2);
+        var secondCheckIn = firstCheckOut;
+        var secondCheckOut = secondCheckIn.AddDays(2);
+
+        await client.PostAsync("/api/admin/seed", null);
+
+        barrier.Arm();
+
+        var concurrentResponses = await Task.WhenAll(
+            CreateBookingAsync(client, "First back-to-back guest", firstCheckIn, firstCheckOut),
+            CreateBookingAsync(client, "Second back-to-back guest", secondCheckIn, secondCheckOut));
+
+        try
+        {
+            Assert.All(
+                concurrentResponses,
+                response => Assert.Equal(HttpStatusCode.Created, response.StatusCode));
+
+            var createdBookings = new[]
+            {
+                await ReadFromJsonAsync<BookingDto>(concurrentResponses[0], JsonOptions),
+                await ReadFromJsonAsync<BookingDto>(concurrentResponses[1], JsonOptions)
+            };
+
+            Assert.All(createdBookings, booking => Assert.Equal("201", booking!.RoomNumber));
+
+            await using var scope = factory.Services.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<HotelBookingDbContext>();
+            var bookings = await dbContext.Bookings
+                .Where(booking =>
+                    booking.CheckInDate >= firstCheckIn
+                    && booking.CheckOutDate <= secondCheckOut)
+                .OrderBy(booking => booking.CheckInDate)
+                .ToListAsync();
+
+            Assert.Equal(2, bookings.Count);
+            Assert.Single(bookings.Select(booking => booking.RoomId).Distinct());
+            Assert.Equal(firstCheckOut, bookings[1].CheckInDate);
+        }
+        finally
+        {
+            foreach (var response in concurrentResponses)
+            {
+                response.Dispose();
+            }
+        }
+    }
+
+    [Fact]
     public async Task Reset_clears_seeded_data()
     {
         await using var factory = new HotelBookingApiFactory(sqlServer);

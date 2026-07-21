@@ -48,6 +48,11 @@ Avoid separate `Application`, `Domain`, and `Infrastructure` projects. For this
 challenge, `Models`, `Repository`, and `Services` are enough decomposition to
 show design thinking while keeping the implementation easy to review.
 
+### Runtime Architecture
+
+See [Solution Architecture](solution-architecture.md) for the application
+projects, service flow, EF Core persistence, and database targets.
+
 ## Domain Model
 
 Core entities:
@@ -267,6 +272,13 @@ Swagger / API consumer
   -> Azure Container Apps Consumption
   -> Azure SQL Database serverless
 ```
+
+### High-Level Solution And Azure Architecture
+
+See
+[Azure Infrastructure Architecture](azure-infrastructure-architecture.md) for
+the GitHub delivery flow, Bicep provisioning, Container Apps hosting, and Azure
+SQL resources.
 
 Recommended infrastructure:
 
