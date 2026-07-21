@@ -38,7 +38,7 @@ flowchart TB
         subgraph SqlPlatform["Azure SQL logical server"]
             Firewall["Firewall rule<br/>Allow Azure services"]
             Entra["Microsoft Entra administrator"]
-            SqlDb["HotelBooking database<br/>General Purpose serverless<br/>0.5–2 vCores · auto-pause 60 min"]
+            SqlDb["HotelBookingFree database<br/>General Purpose serverless free offer<br/>0.5–2 vCores · auto-pause 15 min"]
 
             Firewall --> SqlDb
             Entra -. "administration" .-> SqlDb

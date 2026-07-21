@@ -20,6 +20,24 @@ param sqlAdministratorLogin string = 'hoteladmin'
 param sqlEntraAdministratorLogin string
 param sqlEntraAdministratorObjectId string
 
+@description('Azure SQL database name. Change this to create a replacement database during a cost or migration cutover.')
+param sqlDatabaseName string = 'HotelBooking'
+
+@description('Apply the Azure SQL Database monthly free allowance when the subscription is eligible.')
+param useSqlFreeLimit bool = false
+
+@allowed([
+  'AutoPause'
+  'BillOverUsage'
+])
+@description('Behavior after the Azure SQL monthly free allowance is exhausted.')
+param sqlFreeLimitExhaustionBehavior string = 'BillOverUsage'
+
+@minValue(15)
+@maxValue(10080)
+@description('Minutes of inactivity before the General Purpose serverless database pauses.')
+param sqlAutoPauseDelay int = 15
+
 @secure()
 param sqlAdministratorPassword string
 
@@ -27,7 +45,6 @@ var suffix = take(uniqueString(subscription().id, resourceGroup().id), 8)
 var containerAppsEnvironmentName = 'cae-${projectName}-${environmentName}-${suffix}'
 var apiAppName = 'ca-${projectName}-${environmentName}-${suffix}'
 var sqlServerName = 'sql-${projectName}-${environmentName}-${suffix}'
-var sqlDatabaseName = 'HotelBooking'
 var tags = {
   environment: environmentName
   project: projectName
@@ -79,10 +96,12 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01' = {
     capacity: 2
   }
   properties: {
-    autoPauseDelay: 60
+    autoPauseDelay: sqlAutoPauseDelay
     minCapacity: json('0.5')
     maxSizeBytes: 34359738368
     requestedBackupStorageRedundancy: 'Local'
+    useFreeLimit: useSqlFreeLimit
+    freeLimitExhaustionBehavior: useSqlFreeLimit ? sqlFreeLimitExhaustionBehavior : null
     zoneRedundant: false
   }
 }
