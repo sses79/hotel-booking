@@ -136,6 +136,20 @@ sql_auto_pause="$(az sql db show \
   --query autoPauseDelay \
   --output tsv)"
 
+sql_use_free_limit="$(az sql db show \
+  --name "$sql_database_name" \
+  --server "$sql_server_name" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query useFreeLimit \
+  --output tsv)"
+
+sql_free_limit_behavior="$(az sql db show \
+  --name "$sql_database_name" \
+  --server "$sql_server_name" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query freeLimitExhaustionBehavior \
+  --output tsv)"
+
 sql_entra_administrator="$(az sql server ad-admin list \
   --server "$sql_server_name" \
   --resource-group "$RESOURCE_GROUP" \
@@ -174,7 +188,9 @@ health_response="$(curl \
 [[ -z "$log_destination" ]]
 [[ "$sql_state" == "Online" || "$sql_state" == "Paused" ]]
 [[ "$sql_sku" == "GP_S_Gen5" ]]
-[[ "$sql_auto_pause" == "60" ]]
+[[ "$sql_auto_pause" == "15" ]]
+[[ "$sql_use_free_limit" == "true" ]]
+[[ "$sql_free_limit_behavior" == "BillOverUsage" ]]
 [[ -n "$sql_entra_administrator" ]]
 [[ "$application_insights_count" == "0" ]]
 [[ "$log_analytics_count" == "0" ]]
@@ -186,7 +202,7 @@ printf '%s\n' \
   "  API: $api_url" \
   "  Image: $api_image" \
   "  Scale: $min_replicas-$max_replicas replicas" \
-  "  Azure SQL: $sql_database_name is $sql_state ($sql_sku, ${sql_auto_pause}-minute auto-pause)" \
+  "  Azure SQL: $sql_database_name is $sql_state ($sql_sku, free limit, ${sql_auto_pause}-minute auto-pause)" \
   "  SQL Entra administrator: $sql_entra_administrator" \
   "  Monitoring: no Application Insights or Log Analytics" \
   "  Health: $health_response"

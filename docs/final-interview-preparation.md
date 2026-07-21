@@ -351,7 +351,7 @@ The optional deployment is deliberately small:
 ```text
 Public immutable GHCR image tagged with commit SHA
         -> Azure Container Apps Consumption, 0-2 replicas
-        -> Azure SQL Database serverless, 60-minute auto-pause
+        -> Azure SQL Database free-offer serverless, 15-minute auto-pause
 ```
 
 This mirrors the SQL Server behavior used locally and in tests, supports more

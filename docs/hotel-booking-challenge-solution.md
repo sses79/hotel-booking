@@ -116,7 +116,7 @@ lookup, seed/reset, Swagger, and OpenAPI.
 ```text
 Public immutable GHCR image
   -> Azure Container Apps Consumption (0-2 replicas)
-  -> Azure SQL Database serverless (60-minute auto-pause)
+  -> Azure SQL Database free-offer serverless (15-minute auto-pause)
 ```
 
 Bicep provisions the environment. GitHub Actions builds SHA-tagged API images,

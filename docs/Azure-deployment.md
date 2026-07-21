@@ -16,6 +16,11 @@ The development parameters configure the repository owner's tenant identity as
 the Azure SQL Microsoft Entra administrator. This enables portal Query Editor
 access while the Container App continues to use its SQL authentication secret.
 
+The development deployment creates `HotelBookingFree` with the Azure SQL
+Database monthly free allowance. The subscription must be eligible and have a
+free-database slot available. If the free allowance is exhausted, the database
+continues at standard serverless rates so the interview demo remains available.
+
 ## Portal Query Editor
 
 Query Editor requires both:
@@ -135,7 +140,8 @@ The first deployment should create:
 - One Container Apps environment with no application-log destination.
 - One Container App using the immutable GHCR image.
 - One Azure SQL logical server.
-- One Azure SQL serverless database with 60-minute auto-pause.
+- One `HotelBookingFree` Azure SQL serverless database using the monthly free
+  allowance and 15-minute auto-pause.
 - One SQL firewall rule allowing Azure services.
 
 It should not create Application Insights or Log Analytics.
@@ -176,7 +182,8 @@ The script verifies:
 - The Container App uses a SHA-tagged GHCR image.
 - Scale is configured from zero to two replicas.
 - No application-log destination is configured.
-- Azure SQL uses the serverless SKU and 60-minute auto-pause.
+- Azure SQL uses the serverless SKU, monthly free allowance, paid-overage safety
+  behavior, and 15-minute auto-pause.
 - The Azure SQL server has a Microsoft Entra administrator.
 - Application Insights and Log Analytics are absent.
 - The deployed `/health` endpoint returns `Healthy`.
@@ -215,6 +222,48 @@ Azure SQL can take a little longer on the first seed request or after resuming
 from auto-pause. The seed endpoint applies pending EF Core migrations before
 resetting and creating test data.
 
+## Cut Over From The Legacy Paid Database
+
+Changing `sqlDatabaseName` from `HotelBooking` to `HotelBookingFree` creates a
+new database during an incremental Bicep deployment. The same deployment updates
+the Container App secret so new API revisions connect to `HotelBookingFree`.
+
+The old `HotelBooking` database is deliberately left in place for rollback.
+Azure SQL Database has no stop operation that removes all charges: a paused
+serverless database stops compute billing but continues to incur provisioned
+storage charges.
+
+Complete these checks before deleting the old database:
+
+1. Call `POST /api/admin/seed` so the new database applies migrations and creates
+   predictable data.
+2. Run `./scripts/check-azure-resources.sh`.
+3. Create a booking through Swagger and retrieve it by reference.
+4. Confirm the deployment output reports `HotelBookingFree`.
+
+```bash
+az deployment group show \
+  --name main \
+  --resource-group rg-hotel-booking-dev-uk-south \
+  --query properties.outputs.sqlDatabaseName.value \
+  --output tsv
+```
+
+The following command permanently removes the legacy database and its demo
+bookings. Run it only after the new database passes the smoke tests:
+
+```bash
+az sql db delete \
+  --resource-group rg-hotel-booking-dev-uk-south \
+  --server sql-hotel-booking-dev-qjygtiyk \
+  --name HotelBooking \
+  --yes
+```
+
+The deletion is intentionally not embedded in Bicep. Incremental deployments do
+not delete resources removed or renamed in a template, and an automatic delete
+would remove the rollback path before the new database was verified.
+
 ## Deploy A New API Version
 
 1. Merge the API change to `main`.
@@ -228,35 +277,22 @@ resetting and creating test data.
 Bicep updates the Container App to the new immutable image. It does not require
 a new Azure resource group.
 
-### First Migration-Enabled Deployment
-
-The original demo database was created with `EnsureCreated` before EF migrations
-were introduced. It has no migration history, so recreate only the disposable
-database once before deploying the first migration-enabled image:
-
-```bash
-az sql db delete \
-  --resource-group rg-hotel-booking-dev-uk-south \
-  --server sql-hotel-booking-dev-qjygtiyk \
-  --name HotelBooking \
-  --yes
-```
-
-Then run the Bicep deployment and call `POST /api/admin/seed`. Bicep recreates
-the database, and the seed endpoint applies `InitialCreate` before inserting
-the six test rooms. This operation permanently removes existing demo bookings.
-
 ## Cost Controls
 
 - Container Apps uses Consumption with `minReplicas: 0`.
-- Azure SQL uses serverless compute with `minCapacity: 0.5` and a 60-minute
+- The development database uses the Azure SQL monthly free allowance: 100,000
+  vCore-seconds, 32 GB of data, and 32 GB of backup storage per month.
+- Azure SQL uses serverless compute with `minCapacity: 0.5` and a 15-minute
   auto-pause delay.
+- Free-limit exhaustion uses `BillOverUsage` so the interview demo remains
+  available; overage is charged at normal serverless rates.
 - SQL backup storage uses local redundancy.
 - No Application Insights or Log Analytics resources are deployed.
 - GHCR replaces a paid Azure Container Registry.
 
-Azure SQL serverless and Container Apps are usage-based services, not guaranteed
-free services. Check Azure Cost Management after deployment.
+The free allowance resets monthly. Azure SQL overage and Container Apps remain
+usage-based services, so check Azure Cost Management after deployment and keep a
+small budget alert configured.
 
 ## Remove The Environment
 

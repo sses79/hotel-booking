@@ -281,7 +281,8 @@ The main environment is deployed in `rg-hotel-booking-dev-uk-south`.
 
 ### Azure SQL Database
 
-`HotelBooking` runs on the serverless SQL server
+The cost-optimized deployment uses the `HotelBookingFree` free-offer database
+on the serverless SQL server
 `sql-hotel-booking-dev-qjygtiyk`:
 
 ![Deployed Azure SQL Database](docs/image/azure-sql-database.png)
